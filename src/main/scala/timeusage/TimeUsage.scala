@@ -98,10 +98,16 @@ object TimeUsage {
     val working = Seq("t05", "t1805")
     val otherActivities = Seq("t02", "t04", "t06", "t07", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16", "t18")
 
-    def column(prefixes: Seq[String]) =
-      columnNames.filter(n => prefixes.exists(p => n.startsWith(p))).map(n => new Column(n))
+    def filterColumns(prefixes: Seq[String], previousGroup: Set[String] = Set()) =
+      columnNames.filter(n => prefixes.exists(p => n.startsWith(p)) && !previousGroup.contains(n))
 
-    (column(primaryNeeds), column(working), column(otherActivities))
+    def toColumn(n: String): Column = new Column(n)
+
+    val primaryNeedsColumns = filterColumns(primaryNeeds)
+    val workingColumns = filterColumns(working)
+    val otherColumns = filterColumns(otherActivities, (primaryNeedsColumns ++ workingColumns).toSet).map(toColumn)
+    (primaryNeedsColumns.map(toColumn), workingColumns.map(toColumn), otherColumns)
+
   }
 
   /** @return a projection of the initial DataFrame such that all columns containing hours spent on primary needs
